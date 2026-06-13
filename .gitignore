@@ -1,0 +1,21 @@
+# Secrets — never commit
+.streamlit/secrets.toml
+
+# Database
+*.db
+*.sqlite3
+
+# Student face photos (personal data)
+static/faces/
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.env
+venv/
+.venv/
+
+# OS
+.DS_Store
+Thumbs.db
