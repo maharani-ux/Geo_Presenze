@@ -1,9 +1,13 @@
 streamlit>=1.35.0
 sqlalchemy>=2.0.0
-deepface>=0.0.93
 geopy>=2.4.1
 Pillow>=10.0.0
 opencv-python-headless>=4.9.0.80
-tf-keras>=2.16.0
-retina-face>=0.0.17
 pandas>=2.0.0
+
+# Face recognition stack — pinned to versions that work on Python 3.11
+# deepface 0.0.93 is the last version with stable TF 2.x support
+deepface==0.0.93
+tensorflow==2.15.1
+tf-keras==2.15.1
+retina-face==0.0.17
