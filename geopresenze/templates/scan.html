@@ -95,14 +95,19 @@ async function submit(){
         session_id:parseInt(document.getElementById('sess').value),
         lat:coords.latitude,lng:coords.longitude,accuracy:coords.accuracy,image})});
     const d=await r.json();
-    const icon={present:'✅',late:'⚠️',absent:'❌'}[d.status]||'❌';
     res.style.display='block';
-    res.className='r-'+(d.status||'error');
-    res.innerHTML=`<div class="rtitle">${icon} ${(d.status||'error').toUpperCase()}</div>
-      <div><span class="chip">Distance: ${d.distance_m} m</span>
-           <span class="chip">Face: ${d.face_conf}%</span>
-           ${d.flagged?'<span class="chip" style="background:#fcc">Flagged</span>':''}</div>
-      ${d.flag_reason?`<div style="margin-top:8px;font-size:12px">Reason: ${d.flag_reason}</div>`:''}`;
+    if(d.error){
+      res.className='r-error';
+      res.innerHTML=`<div class="rtitle">❌ ERROR</div><div>${d.error}</div>`;
+    } else {
+      const icon={present:'✅',late:'⚠️',absent:'❌'}[d.status]||'❌';
+      res.className='r-'+(d.status||'error');
+      res.innerHTML=`<div class="rtitle">${icon} ${(d.status||'error').toUpperCase()}</div>
+        <div><span class="chip">Distance: ${d.distance_m} m</span>
+             <span class="chip">Face: ${d.face_conf}%</span>
+             ${d.flagged?'<span class="chip" style="background:#fcc">Flagged</span>':''}</div>
+        ${d.flag_reason?`<div style="margin-top:8px;font-size:12px">Reason: ${d.flag_reason}</div>`:''}`;
+    }
   }catch(e){res.style.display='block';res.className='r-error';res.textContent='Error: '+e.message;}
   finally{btn.disabled=false;btn.textContent='Mark attendance';}
 }
