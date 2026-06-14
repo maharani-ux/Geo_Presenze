@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Geo-Presenze</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,sans-serif;background:#f0f4f2;min-height:100vh}
+.hdr{background:#0F6E56;color:#E1F5EE;padding:14px 20px;display:flex;align-items:center;gap:10px}
+.hdr h1{font-size:18px;font-weight:700}
+.hdr p{font-size:12px;opacity:.7;margin-top:2px}
+.c{max-width:440px;margin:0 auto;padding:16px}
+.card{background:#fff;border-radius:14px;padding:16px;margin-bottom:14px;border:1px solid #dde8e3}
+.card-title{font-size:11px;font-weight:700;color:#0F6E56;text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px}
+video{width:100%;border-radius:10px;background:#111;aspect-ratio:4/3;object-fit:cover;display:block}
+canvas{display:none}
+.face-wrap{position:relative}
+.face-ov{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none}
+.oval{width:110px;height:140px;border:2px dashed #1D9E75;border-radius:50%}
+label{display:block;font-size:12px;font-weight:600;color:#444;margin-bottom:4px}
+input{width:100%;padding:10px 12px;border:1px solid #ddd;border-radius:8px;font-size:14px;outline:none;margin-bottom:12px}
+input:focus{border-color:#1D9E75}
+.geo-row{display:flex;justify-content:space-between;font-size:13px;margin-bottom:6px}
+.bar{height:6px;background:#e8f5ee;border-radius:3px;overflow:hidden}
+.bar-fill{height:100%;background:#1D9E75;border-radius:3px;width:0%;transition:width .5s}
+.geo-note{font-size:11px;color:#888;margin-top:4px}
+button{width:100%;padding:14px;background:#0F6E56;color:#fff;border:none;border-radius:12px;font-size:16px;font-weight:700;cursor:pointer}
+button:disabled{background:#aaa;cursor:not-allowed}
+button:hover:not(:disabled){background:#085041}
+#res{border-radius:12px;padding:14px;font-size:14px;line-height:1.7;display:none;margin-top:14px}
+.r-present{background:#E1F5EE;border:1px solid #5DCAA5;color:#085041}
+.r-late{background:#FAEEDA;border:1px solid #EF9F27;color:#633806}
+.r-absent,.r-error{background:#FCEBEB;border:1px solid #F09595;color:#791F1F}
+.rtitle{font-weight:700;font-size:15px;margin-bottom:6px}
+.chip{display:inline-block;padding:2px 8px;border-radius:999px;font-size:11px;font-weight:600;background:rgba(0,0,0,.08);margin:2px}
+</style></head><body>
+<div class="hdr">
+  <svg width="26" height="26" viewBox="0 0 24 24" fill="none">
+    <circle cx="12" cy="12" r="4" fill="#E1F5EE"/>
+    <circle cx="12" cy="12" r="9" stroke="#E1F5EE" stroke-width="1.5" fill="none" stroke-dasharray="3 3"/>
+  </svg>
+  <div><h1>Geo-Presenze</h1><p>Student attendance check-in</p></div>
+</div>
+<div class="c">
+  <div class="card">
+    <div class="card-title">Your details</div>
+    <label>Student ID</label>
+    <input id="sid" type="text" value="STD-001" placeholder="e.g. STD-001">
+    <label>Session ID</label>
+    <input id="sess" type="number" value="1" min="1">
+  </div>
+  <div class="card">
+    <div class="card-title">Face scan — position your face in the oval</div>
+    <div class="face-wrap">
+      <video id="cam" autoplay playsinline muted></video>
+      <canvas id="cv"></canvas>
+      <div class="face-ov"><div class="oval"></div></div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-title">Location</div>
+    <div class="geo-row"><span id="loc-txt">Fetching GPS…</span><span id="loc-badge" style="font-size:11px;font-weight:700"></span></div>
+    <div class="bar"><div class="bar-fill" id="geo-fill"></div></div>
+    <div class="geo-note" id="geo-note">Waiting for GPS signal…</div>
+  </div>
+  <button id="btn" onclick="submit()" disabled>Mark attendance</button>
+  <div id="res"></div>
+</div>
+<script>
+const video=document.getElementById('cam'),canvas=document.getElementById('cv'),btn=document.getElementById('btn');
+let coords=null;
+navigator.mediaDevices.getUserMedia({video:{facingMode:'user'}}).then(s=>video.srcObject=s).catch(()=>alert('Camera permission required.'));
+navigator.geolocation.watchPosition(p=>{
+  coords=p.coords;
+  const acc=Math.round(coords.accuracy);
+  document.getElementById('loc-txt').textContent=`${coords.latitude.toFixed(5)}, ${coords.longitude.toFixed(5)}`;
+  document.getElementById('geo-note').textContent=`GPS accuracy: ±${acc} m`;
+  const badge=document.getElementById('loc-badge');
+  badge.textContent=acc<50?'Good signal':'Weak signal';
+  badge.style.color=acc<50?'#0F6E56':'#854F0B';
+  document.getElementById('geo-fill').style.width=Math.max(0,Math.min(100,100-acc))+'%';
+  btn.disabled=false;
+},e=>document.getElementById('loc-txt').textContent='Location error: '+e.message,{enableHighAccuracy:true,timeout:15000});
+async function submit(){
+  if(!coords){alert('Waiting for GPS…');return;}
+  btn.disabled=true;btn.textContent='Processing…';
+  canvas.width=video.videoWidth;canvas.height=video.videoHeight;
+  canvas.getContext('2d').drawImage(video,0,0);
+  const image=canvas.toDataURL('image/jpeg',0.85);
+  const res=document.getElementById('res');
+  try{
+    const r=await fetch('/api/attend',{method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({student_id:document.getElementById('sid').value.trim(),
+        session_id:parseInt(document.getElementById('sess').value),
+        lat:coords.latitude,lng:coords.longitude,accuracy:coords.accuracy,image})});
+    const d=await r.json();
+    const icon={present:'✅',late:'⚠️',absent:'❌'}[d.status]||'❌';
+    res.style.display='block';
+    res.className='r-'+(d.status||'error');
+    res.innerHTML=`<div class="rtitle">${icon} ${(d.status||'error').toUpperCase()}</div>
+      <div><span class="chip">Distance: ${d.distance_m} m</span>
+           <span class="chip">Face: ${d.face_conf}%</span>
+           ${d.flagged?'<span class="chip" style="background:#fcc">Flagged</span>':''}</div>
+      ${d.flag_reason?`<div style="margin-top:8px;font-size:12px">Reason: ${d.flag_reason}</div>`:''}`;
+  }catch(e){res.style.display='block';res.className='r-error';res.textContent='Error: '+e.message;}
+  finally{btn.disabled=false;btn.textContent='Mark attendance';}
+}
+</script></body></html>

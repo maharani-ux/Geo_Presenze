@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Geo-Presenze Dashboard</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,sans-serif;background:#f0f4f2}
+.top{background:#0F6E56;color:#E1F5EE;padding:14px 24px;display:flex;justify-content:space-between;align-items:center}
+.top h1{font-size:18px;font-weight:700}
+.top a{color:#9FE1CB;font-size:13px;text-decoration:none}
+.main{max-width:960px;margin:0 auto;padding:20px 16px}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:12px;margin-bottom:24px}
+.stat{background:#fff;border-radius:12px;padding:14px;border:1px solid #dde8e3}
+.stat-lbl{font-size:11px;color:#777;text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px}
+.stat-val{font-size:26px;font-weight:700;color:#0F6E56}
+h2{font-size:14px;font-weight:700;color:#085041;margin-bottom:10px}
+table{width:100%;border-collapse:collapse;background:#fff;border-radius:12px;overflow:hidden;border:1px solid #dde8e3}
+th{background:#0F6E56;color:#E1F5EE;padding:9px 12px;font-size:12px;text-align:left}
+td{padding:9px 12px;font-size:13px;border-bottom:1px solid #edf3f0}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:#f5faf7}
+.badge{padding:2px 8px;border-radius:999px;font-size:11px;font-weight:700}
+.b-present{background:#E1F5EE;color:#085041}
+.b-late{background:#FAEEDA;color:#633806}
+.b-absent{background:#FCEBEB;color:#791F1F}
+.b-flag{background:#FCEBEB;color:#791F1F}
+.refresh{font-size:12px;color:#888;float:right}
+</style></head><body>
+<div class="top"><h1>Geo-Presenze Admin</h1><a href="/scan">→ Scan page</a></div>
+<div class="main">
+<div class="stats">
+  <div class="stat"><div class="stat-lbl">Students</div><div class="stat-val" id="s0">—</div></div>
+  <div class="stat"><div class="stat-lbl">Sessions</div><div class="stat-val" id="s1">—</div></div>
+  <div class="stat"><div class="stat-lbl">Present</div><div class="stat-val" id="s2">—</div></div>
+  <div class="stat"><div class="stat-lbl">Late</div><div class="stat-val" id="s3" style="color:#BA7517">—</div></div>
+  <div class="stat"><div class="stat-lbl">Flagged</div><div class="stat-val" id="s4" style="color:#A32D2D">—</div></div>
+  <div class="stat"><div class="stat-lbl">Rate</div><div class="stat-val" id="s5">—</div></div>
+</div>
+<h2>Attendance records <span class="refresh" id="ts"></span></h2>
+<table><thead><tr><th>Student</th><th>Course</th><th>Time</th><th>Status</th><th>Distance</th><th>Face %</th><th>Flagged</th></tr></thead>
+<tbody id="tbody"><tr><td colspan="7">Loading…</td></tr></tbody></table>
+</div>
+<script>
+async function load(){
+  const [st,att]=await Promise.all([fetch('/api/stats').then(r=>r.json()),fetch('/api/attendance').then(r=>r.json())]);
+  [st.students,st.sessions,st.present,st.late,st.flagged,st.rate+'%'].forEach((v,i)=>document.getElementById('s'+i).textContent=v);
+  document.getElementById('ts').textContent='Updated '+new Date().toLocaleTimeString();
+  const tb=document.getElementById('tbody');
+  if(!att.length){tb.innerHTML='<tr><td colspan="7" style="color:#888">No records yet.</td></tr>';return;}
+  tb.innerHTML=att.map(r=>`<tr>
+    <td>${r.student_name||'—'}<br><small style="color:#aaa">${r.student_id||''}</small></td>
+    <td>${r.course_code||'—'}</td>
+    <td style="font-size:11px">${(r.timestamp||'').replace('T',' ').slice(0,16)}</td>
+    <td><span class="badge b-${r.status||'absent'}">${(r.status||'absent').toUpperCase()}</span></td>
+    <td>${r.distance_m!=null?r.distance_m+' m':'—'}</td>
+    <td>${r.face_conf!=null?r.face_conf+'%':'—'}</td>
+    <td>${r.flagged?'<span class="badge b-flag">⚠ Yes</span>':'—'}</td>
+  </tr>`).join('');
+}
+load(); setInterval(load,15000);
+</script></body></html>
