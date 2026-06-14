@@ -1,4 +1,4 @@
-from flask import Blueprint, request, jsonify, render_template
+from flask import Blueprint, request, jsonify, render_template, current_app
 from app.models import db, Student, Session, Attendance
 from datetime import datetime
 import os
@@ -32,7 +32,9 @@ def upload_face():
         return jsonify({"error": "student_id and photo required"}), 400
     s = Student.query.filter_by(student_id=sid).first()
     if not s: return jsonify({"error": "Student not found"}), 404
-    path = f"/content/geopresenze/static/faces/{sid}.jpg"
+    faces_dir = os.path.join(current_app.static_folder, "faces")
+    os.makedirs(faces_dir, exist_ok=True)
+    path = os.path.join(faces_dir, f"{sid}.jpg")
     photo.save(path)
     s.face_path = path; db.session.commit()
     return jsonify({"ok": True, "face_path": path})
