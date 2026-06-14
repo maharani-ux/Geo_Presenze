@@ -31,7 +31,7 @@ def mark_attendance():
     if not in_zone: flags.append(f"outside zone ({dist:.0f}m)")
     if gps_bad:     flags.append("suspicious GPS accuracy")
     if not face_ok: flags.append("face mismatch")
-    if conf < 70:   flags.append(f"low face confidence ({conf:.0f}%)")
+    if conf < 50:   flags.append(f"low face confidence ({conf:.0f}%)")
 
     flagged = len(flags) > 0
     now     = datetime.utcnow()
