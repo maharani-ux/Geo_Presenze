@@ -7,13 +7,13 @@
 body{font-family:-apple-system,sans-serif;background:#f0f4f2}
 .top{background:#0F6E56;color:#E1F5EE;padding:14px 24px;display:flex;justify-content:space-between;align-items:center}
 .top h1{font-size:18px;font-weight:700}
-.top a{color:#9FE1CB;font-size:13px;text-decoration:none}
+.top a{color:#9FE1CB;font-size:13px;text-decoration:none;margin-left:14px}
 .main{max-width:960px;margin:0 auto;padding:20px 16px}
 .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:12px;margin-bottom:24px}
 .stat{background:#fff;border-radius:12px;padding:14px;border:1px solid #dde8e3}
 .stat-lbl{font-size:11px;color:#777;text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px}
 .stat-val{font-size:26px;font-weight:700;color:#0F6E56}
-h2{font-size:14px;font-weight:700;color:#085041;margin-bottom:10px}
+h2{font-size:14px;font-weight:700;color:#085041;margin-bottom:10px;margin-top:24px}
 table{width:100%;border-collapse:collapse;background:#fff;border-radius:12px;overflow:hidden;border:1px solid #dde8e3}
 th{background:#0F6E56;color:#E1F5EE;padding:9px 12px;font-size:12px;text-align:left}
 td{padding:9px 12px;font-size:13px;border-bottom:1px solid #edf3f0}
@@ -25,9 +25,37 @@ tr:hover td{background:#f5faf7}
 .b-absent{background:#FCEBEB;color:#791F1F}
 .b-flag{background:#FCEBEB;color:#791F1F}
 .refresh{font-size:12px;color:#888;float:right}
+.panels{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:8px}
+@media(max-width:600px){.panels{grid-template-columns:1fr}}
+.panel{background:#fff;border-radius:14px;padding:16px;border:1px solid #dde8e3}
+.panel h3{font-size:12px;font-weight:700;color:#0F6E56;text-transform:uppercase;letter-spacing:.06em;margin-bottom:12px}
+label{display:block;font-size:12px;font-weight:600;color:#444;margin-bottom:4px;margin-top:8px}
+input,select{width:100%;padding:8px 10px;border:1px solid #ddd;border-radius:8px;font-size:13px;outline:none;margin-bottom:4px}
+input:focus,select:focus{border-color:#1D9E75}
+.face-preview{width:80px;height:80px;border-radius:50%;object-fit:cover;border:2px solid #1D9E75;display:none;margin:8px auto 0;display:block;background:#eee}
+.face-preview[src=""]{display:none}
+btn,.btn{display:inline-block;width:100%;padding:10px;background:#0F6E56;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;margin-top:8px}
+.btn:hover{background:#085041}
+.btn-sec{background:#fff;color:#0F6E56;border:1px solid #0F6E56}
+.btn-sec:hover{background:#f0f9f5}
+.msg{font-size:12px;margin-top:6px;padding:6px 10px;border-radius:6px;display:none}
+.msg-ok{background:#E1F5EE;color:#085041;display:block}
+.msg-err{background:#FCEBEB;color:#791F1F;display:block}
+.student-row{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid #edf3f0;font-size:13px}
+.student-row:last-child{border-bottom:none}
+.avatar{width:36px;height:36px;border-radius:50%;object-fit:cover;background:#dde8e3;flex-shrink:0}
+.s-info{flex:1}
+.s-name{font-weight:600}
+.s-id{font-size:11px;color:#aaa}
+.has-face{font-size:11px;color:#0F6E56;font-weight:600}
+.no-face{font-size:11px;color:#A32D2D}
 </style></head><body>
-<div class="top"><h1>Geo-Presenze Admin</h1><a href="/scan">→ Scan page</a></div>
+<div class="top">
+  <h1>Geo-Presenze Admin</h1>
+  <div><a href="/scan">→ Scan page</a></div>
+</div>
 <div class="main">
+
 <div class="stats">
   <div class="stat"><div class="stat-lbl">Students</div><div class="stat-val" id="s0">—</div></div>
   <div class="stat"><div class="stat-lbl">Sessions</div><div class="stat-val" id="s1">—</div></div>
@@ -36,14 +64,154 @@ tr:hover td{background:#f5faf7}
   <div class="stat"><div class="stat-lbl">Flagged</div><div class="stat-val" id="s4" style="color:#A32D2D">—</div></div>
   <div class="stat"><div class="stat-lbl">Rate</div><div class="stat-val" id="s5">—</div></div>
 </div>
+
+<div class="panels">
+  <!-- Add Student + Upload Face -->
+  <div class="panel">
+    <h3>Add Student</h3>
+    <label>Student ID</label>
+    <input id="new-sid" placeholder="e.g. STD-002">
+    <label>Full Name</label>
+    <input id="new-name" placeholder="e.g. Siti Rahayu">
+    <label>Email (optional)</label>
+    <input id="new-email" type="email" placeholder="e.g. siti@uni.edu">
+    <button class="btn" onclick="addStudent()">Add Student</button>
+    <div class="msg" id="msg-add"></div>
+  </div>
+
+  <!-- Upload Face Photo -->
+  <div class="panel">
+    <h3>Upload Face Photo</h3>
+    <label>Student ID</label>
+    <input id="face-sid" placeholder="e.g. STD-001">
+    <label>Photo</label>
+    <input id="face-file" type="file" accept="image/*" onchange="previewFace(this)">
+    <img id="face-preview" class="face-preview" src="" alt="preview">
+    <button class="btn" onclick="uploadFace()">Upload Face</button>
+    <div class="msg" id="msg-face"></div>
+  </div>
+
+  <!-- Create Session -->
+  <div class="panel">
+    <h3>Create Session</h3>
+    <label>Course Code</label>
+    <input id="s-code" placeholder="e.g. CS301">
+    <label>Course Name</label>
+    <input id="s-name" placeholder="e.g. Algorithms">
+    <label>Room</label>
+    <input id="s-room" placeholder="e.g. B203">
+    <label>Start Time</label>
+    <input id="s-start" type="datetime-local">
+    <label>End Time</label>
+    <input id="s-end" type="datetime-local">
+    <label>Campus Latitude</label>
+    <input id="s-lat" placeholder="e.g. 5.373691">
+    <label>Campus Longitude</label>
+    <input id="s-lng" placeholder="e.g. 103.078824">
+    <label>Radius (metres)</label>
+    <input id="s-radius" type="number" value="100">
+    <button class="btn" onclick="addSession()">Create Session</button>
+    <div class="msg" id="msg-sess"></div>
+  </div>
+
+  <!-- Student List -->
+  <div class="panel">
+    <h3>Registered Students</h3>
+    <div id="student-list"><div style="color:#aaa;font-size:13px">Loading…</div></div>
+  </div>
+</div>
+
 <h2>Attendance records <span class="refresh" id="ts"></span></h2>
 <table><thead><tr><th>Student</th><th>Course</th><th>Time</th><th>Status</th><th>Distance</th><th>Face %</th><th>Flagged</th></tr></thead>
 <tbody id="tbody"><tr><td colspan="7">Loading…</td></tr></tbody></table>
 </div>
+
 <script>
+function msg(id, text, ok){
+  const el=document.getElementById(id);
+  el.textContent=text; el.className='msg '+(ok?'msg-ok':'msg-err');
+}
+
+function previewFace(input){
+  const file=input.files[0]; if(!file) return;
+  const reader=new FileReader();
+  reader.onload=e=>{
+    const img=document.getElementById('face-preview');
+    img.src=e.target.result; img.style.display='block';
+  };
+  reader.readAsDataURL(file);
+}
+
+async function addStudent(){
+  const sid=document.getElementById('new-sid').value.trim();
+  const name=document.getElementById('new-name').value.trim();
+  const email=document.getElementById('new-email').value.trim();
+  if(!sid||!name){msg('msg-add','Student ID and Name are required.',false);return;}
+  const r=await fetch('/api/students',{method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({student_id:sid,name,email})});
+  const d=await r.json();
+  if(d.ok){msg('msg-add','Student added!',true);loadStudents();}
+  else msg('msg-add',d.error||'Error',false);
+}
+
+async function uploadFace(){
+  const sid=document.getElementById('face-sid').value.trim();
+  const file=document.getElementById('face-file').files[0];
+  if(!sid||!file){msg('msg-face','Student ID and photo required.',false);return;}
+  const fd=new FormData();
+  fd.append('student_id',sid); fd.append('photo',file);
+  const r=await fetch('/api/students/face',{method:'POST',body:fd});
+  const d=await r.json();
+  if(d.ok){msg('msg-face','Face uploaded successfully!',true);loadStudents();}
+  else msg('msg-face',d.error||'Error',false);
+}
+
+async function addSession(){
+  const code=document.getElementById('s-code').value.trim();
+  const name=document.getElementById('s-name').value.trim();
+  const room=document.getElementById('s-room').value.trim();
+  const start=document.getElementById('s-start').value;
+  const end=document.getElementById('s-end').value;
+  const lat=parseFloat(document.getElementById('s-lat').value);
+  const lng=parseFloat(document.getElementById('s-lng').value);
+  const radius=parseFloat(document.getElementById('s-radius').value)||100;
+  if(!code||!start||!end||!lat||!lng){msg('msg-sess','Fill in all required fields.',false);return;}
+  const r=await fetch('/api/sessions',{method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({course_code:code,course_name:name,room,
+      start_time:new Date(start).toISOString(),
+      end_time:new Date(end).toISOString(),
+      lat,lng,radius_m:radius})});
+  const d=await r.json();
+  if(d.ok){msg('msg-sess',`Session created (ID: ${d.id})`,true);}
+  else msg('msg-sess',d.error||'Error',false);
+}
+
+async function loadStudents(){
+  const students=await fetch('/api/students').then(r=>r.json());
+  const el=document.getElementById('student-list');
+  if(!students.length){el.innerHTML='<div style="color:#aaa;font-size:13px">No students yet.</div>';return;}
+  el.innerHTML=students.map(s=>`
+    <div class="student-row">
+      <div class="avatar" style="display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:#0F6E56">
+        ${s.name.charAt(0).toUpperCase()}
+      </div>
+      <div class="s-info">
+        <div class="s-name">${s.name}</div>
+        <div class="s-id">${s.student_id}</div>
+      </div>
+      <div>${s.has_face?'<span class="has-face">✓ Face</span>':'<span class="no-face">No face</span>'}</div>
+    </div>`).join('');
+}
+
 async function load(){
-  const [st,att]=await Promise.all([fetch('/api/stats').then(r=>r.json()),fetch('/api/attendance').then(r=>r.json())]);
-  [st.students,st.sessions,st.present,st.late,st.flagged,st.rate+'%'].forEach((v,i)=>document.getElementById('s'+i).textContent=v);
+  const [st,att]=await Promise.all([
+    fetch('/api/stats').then(r=>r.json()),
+    fetch('/api/attendance').then(r=>r.json())
+  ]);
+  [st.students,st.sessions,st.present,st.late,st.flagged,st.rate+'%']
+    .forEach((v,i)=>document.getElementById('s'+i).textContent=v);
   document.getElementById('ts').textContent='Updated '+new Date().toLocaleTimeString();
   const tb=document.getElementById('tbody');
   if(!att.length){tb.innerHTML='<tr><td colspan="7" style="color:#888">No records yet.</td></tr>';return;}
@@ -57,5 +225,6 @@ async function load(){
     <td>${r.flagged?'<span class="badge b-flag">⚠ Yes</span>':'—'}</td>
   </tr>`).join('');
 }
-load(); setInterval(load,15000);
+
+load(); loadStudents(); setInterval(load,15000);
 </script></body></html>
