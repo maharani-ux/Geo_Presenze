@@ -27,13 +27,21 @@ def mark_attendance():
 
         dist, in_zone = check_location(lat, lng, session.lat, session.lng, session.radius_m)
         gps_bad       = is_gps_suspicious(accuracy)
-        face_ok, conf = verify_face(image_b64, student.face_path)
+
+        # Face check is best-effort — never crash the whole request
+        face_ok, conf, face_error = False, 0.0, None
+        try:
+            face_ok, conf = verify_face(image_b64, student.face_path)
+        except Exception as fe:
+            face_error = str(fe)
+            print(f"[attend] face check failed: {fe}")
 
         flags = []
         if not in_zone: flags.append(f"outside zone ({dist:.0f}m)")
         if gps_bad:     flags.append("suspicious GPS accuracy")
-        if not face_ok: flags.append("face mismatch")
-        if conf < 50:   flags.append(f"low face confidence ({conf:.0f}%)")
+        if face_error:  flags.append(f"face check error: {face_error[:80]}")
+        elif not face_ok: flags.append("face mismatch")
+        if not face_error and conf < 50: flags.append(f"low face confidence ({conf:.0f}%)")
 
         flagged = len(flags) > 0
         now     = datetime.utcnow()

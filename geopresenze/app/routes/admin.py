@@ -1,9 +1,29 @@
 from flask import Blueprint, request, jsonify, render_template, current_app
 from app.models import db, Student, Session, Attendance
 from datetime import datetime
-import os
+import os, sys
 
 admin_bp = Blueprint("admin", __name__)
+
+@admin_bp.route("/api/debug")
+def debug():
+    import platform
+    students = Student.query.all()
+    try:
+        import psutil
+        mem = psutil.virtual_memory()
+        mem_info = {"total_mb": mem.total//1024//1024, "available_mb": mem.available//1024//1024, "percent": mem.percent}
+    except Exception:
+        mem_info = "psutil not available"
+    return jsonify({
+        "python": sys.version,
+        "platform": platform.platform(),
+        "memory": mem_info,
+        "students": [{"id": s.student_id, "name": s.name, "face_path": s.face_path,
+                      "face_exists": os.path.exists(s.face_path) if s.face_path else False}
+                     for s in students],
+        "static_folder": current_app.static_folder,
+    })
 
 @admin_bp.route("/")
 def dashboard(): return render_template("dashboard.html")
