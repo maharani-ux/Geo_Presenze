@@ -3,7 +3,7 @@ services:
     name: geo-presenze
     runtime: python
     rootDir: geopresenze
-    buildCommand: pip install --use-deprecated=legacy-resolver -r requirements.txt
+    buildCommand: pip install -r requirements.txt
     startCommand: gunicorn wsgi:app --bind 0.0.0.0:$PORT --workers 1 --timeout 120
     envVars:
       - key: SECRET_KEY
