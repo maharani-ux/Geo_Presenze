@@ -18,13 +18,13 @@ def verify_face(image_b64: str, stored_path: str):
     try:
         from deepface import DeepFace
         # Try multiple backends — fall back to next if face not detected
-        for backend in ["opencv", "retinaface", "mtcnn"]:
+        for backend in ["opencv", "ssd"]:
             try:
                 r = DeepFace.verify(
                     img1_path=tmp, img2_path=stored_path,
-                    model_name="Facenet512",
+                    model_name="Facenet",   # lighter than Facenet512, fits in 512MB RAM
                     detector_backend=backend,
-                    enforce_detection=False  # don't crash if face not clearly detected
+                    enforce_detection=False
                 )
                 conf = round((1 - r["distance"]) * 100, 1)
                 print(f"[Face] backend={backend} verified={r['verified']} conf={conf}")
