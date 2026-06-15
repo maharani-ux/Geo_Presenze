@@ -1,230 +1,840 @@
 <!DOCTYPE html>
-<html lang="en"><head>
-<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Geo-Presenze Dashboard</title>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Geo Presenze 3.0</title>
 <style>
-*{box-sizing:border-box;margin:0;padding:0}
-body{font-family:-apple-system,sans-serif;background:#f0f4f2}
-.top{background:#0F6E56;color:#E1F5EE;padding:14px 24px;display:flex;justify-content:space-between;align-items:center}
-.top h1{font-size:18px;font-weight:700}
-.top a{color:#9FE1CB;font-size:13px;text-decoration:none;margin-left:14px}
-.main{max-width:960px;margin:0 auto;padding:20px 16px}
-.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:12px;margin-bottom:24px}
-.stat{background:#fff;border-radius:12px;padding:14px;border:1px solid #dde8e3}
-.stat-lbl{font-size:11px;color:#777;text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px}
-.stat-val{font-size:26px;font-weight:700;color:#0F6E56}
-h2{font-size:14px;font-weight:700;color:#085041;margin-bottom:10px;margin-top:24px}
-table{width:100%;border-collapse:collapse;background:#fff;border-radius:12px;overflow:hidden;border:1px solid #dde8e3}
-th{background:#0F6E56;color:#E1F5EE;padding:9px 12px;font-size:12px;text-align:left}
-td{padding:9px 12px;font-size:13px;border-bottom:1px solid #edf3f0}
-tr:last-child td{border-bottom:none}
-tr:hover td{background:#f5faf7}
-.badge{padding:2px 8px;border-radius:999px;font-size:11px;font-weight:700}
-.b-present{background:#E1F5EE;color:#085041}
-.b-late{background:#FAEEDA;color:#633806}
-.b-absent{background:#FCEBEB;color:#791F1F}
-.b-flag{background:#FCEBEB;color:#791F1F}
-.refresh{font-size:12px;color:#888;float:right}
-.panels{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:8px}
-@media(max-width:600px){.panels{grid-template-columns:1fr}}
-.panel{background:#fff;border-radius:14px;padding:16px;border:1px solid #dde8e3}
-.panel h3{font-size:12px;font-weight:700;color:#0F6E56;text-transform:uppercase;letter-spacing:.06em;margin-bottom:12px}
-label{display:block;font-size:12px;font-weight:600;color:#444;margin-bottom:4px;margin-top:8px}
-input,select{width:100%;padding:8px 10px;border:1px solid #ddd;border-radius:8px;font-size:13px;outline:none;margin-bottom:4px}
-input:focus,select:focus{border-color:#1D9E75}
-.face-preview{width:80px;height:80px;border-radius:50%;object-fit:cover;border:2px solid #1D9E75;display:none;margin:8px auto 0;display:block;background:#eee}
-.face-preview[src=""]{display:none}
-btn,.btn{display:inline-block;width:100%;padding:10px;background:#0F6E56;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;margin-top:8px}
-.btn:hover{background:#085041}
-.btn-sec{background:#fff;color:#0F6E56;border:1px solid #0F6E56}
-.btn-sec:hover{background:#f0f9f5}
-.msg{font-size:12px;margin-top:6px;padding:6px 10px;border-radius:6px;display:none}
-.msg-ok{background:#E1F5EE;color:#085041;display:block}
-.msg-err{background:#FCEBEB;color:#791F1F;display:block}
-.student-row{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid #edf3f0;font-size:13px}
-.student-row:last-child{border-bottom:none}
-.avatar{width:36px;height:36px;border-radius:50%;object-fit:cover;background:#dde8e3;flex-shrink:0}
-.s-info{flex:1}
-.s-name{font-weight:600}
-.s-id{font-size:11px;color:#aaa}
-.has-face{font-size:11px;color:#0F6E56;font-weight:600}
-.no-face{font-size:11px;color:#A32D2D}
-</style></head><body>
-<div class="top">
-  <h1>Geo-Presenze Admin</h1>
-  <div><a href="/scan">→ Scan page</a></div>
-</div>
-<div class="main">
-
-<div class="stats">
-  <div class="stat"><div class="stat-lbl">Students</div><div class="stat-val" id="s0">—</div></div>
-  <div class="stat"><div class="stat-lbl">Sessions</div><div class="stat-val" id="s1">—</div></div>
-  <div class="stat"><div class="stat-lbl">Present</div><div class="stat-val" id="s2">—</div></div>
-  <div class="stat"><div class="stat-lbl">Late</div><div class="stat-val" id="s3" style="color:#BA7517">—</div></div>
-  <div class="stat"><div class="stat-lbl">Flagged</div><div class="stat-val" id="s4" style="color:#A32D2D">—</div></div>
-  <div class="stat"><div class="stat-lbl">Rate</div><div class="stat-val" id="s5">—</div></div>
-</div>
-
-<div class="panels">
-  <!-- Add Student + Upload Face -->
-  <div class="panel">
-    <h3>Add Student</h3>
-    <label>Student ID</label>
-    <input id="new-sid" placeholder="e.g. STD-002">
-    <label>Full Name</label>
-    <input id="new-name" placeholder="e.g. Siti Rahayu">
-    <label>Email (optional)</label>
-    <input id="new-email" type="email" placeholder="e.g. siti@uni.edu">
-    <button class="btn" onclick="addStudent()">Add Student</button>
-    <div class="msg" id="msg-add"></div>
-  </div>
-
-  <!-- Upload Face Photo -->
-  <div class="panel">
-    <h3>Upload Face Photo</h3>
-    <label>Student ID</label>
-    <input id="face-sid" placeholder="e.g. STD-001">
-    <label>Photo</label>
-    <input id="face-file" type="file" accept="image/*" onchange="previewFace(this)">
-    <img id="face-preview" class="face-preview" src="" alt="preview">
-    <button class="btn" onclick="uploadFace()">Upload Face</button>
-    <div class="msg" id="msg-face"></div>
-  </div>
-
-  <!-- Create Session -->
-  <div class="panel">
-    <h3>Create Session</h3>
-    <label>Course Code</label>
-    <input id="s-code" placeholder="e.g. CS301">
-    <label>Course Name</label>
-    <input id="s-name" placeholder="e.g. Algorithms">
-    <label>Room</label>
-    <input id="s-room" placeholder="e.g. B203">
-    <label>Start Time</label>
-    <input id="s-start" type="datetime-local">
-    <label>End Time</label>
-    <input id="s-end" type="datetime-local">
-    <label>Campus Latitude</label>
-    <input id="s-lat" placeholder="e.g. 5.373691">
-    <label>Campus Longitude</label>
-    <input id="s-lng" placeholder="e.g. 103.078824">
-    <label>Radius (metres)</label>
-    <input id="s-radius" type="number" value="100">
-    <button class="btn" onclick="addSession()">Create Session</button>
-    <div class="msg" id="msg-sess"></div>
-  </div>
-
-  <!-- Student List -->
-  <div class="panel">
-    <h3>Registered Students</h3>
-    <div id="student-list"><div style="color:#aaa;font-size:13px">Loading…</div></div>
-  </div>
-</div>
-
-<h2>Attendance records <span class="refresh" id="ts"></span></h2>
-<table><thead><tr><th>Student</th><th>Course</th><th>Time</th><th>Status</th><th>Distance</th><th>Face %</th><th>Flagged</th></tr></thead>
-<tbody id="tbody"><tr><td colspan="7">Loading…</td></tr></tbody></table>
-</div>
-
-<script>
-function msg(id, text, ok){
-  const el=document.getElementById(id);
-  el.textContent=text; el.className='msg '+(ok?'msg-ok':'msg-err');
+/* ── Reset & Base ── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body {
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  background: #f4f6fb;
+  color: #1e2340;
+  display: flex;
+  min-height: 100vh;
+  overflow-x: hidden;
 }
 
+/* ── Sidebar ── */
+#sidebar {
+  width: 240px;
+  min-height: 100vh;
+  background: #1a1f36;
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  position: fixed;
+  top: 0; left: 0; bottom: 0;
+  z-index: 100;
+  transition: transform 0.3s ease;
+}
+.sb-header {
+  padding: 28px 20px 24px;
+  border-bottom: 1px solid rgba(255,255,255,0.07);
+}
+.sb-logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+}
+.sb-pin {
+  width: 36px; height: 36px;
+  background: linear-gradient(135deg, #4f6ef7, #7c3aed);
+  border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px;
+  flex-shrink: 0;
+}
+.sb-title {
+  color: #fff;
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: -0.3px;
+  line-height: 1.2;
+}
+.sb-subtitle {
+  color: #7b82a8;
+  font-size: 11px;
+  margin-top: 2px;
+}
+.sb-nav {
+  flex: 1;
+  padding: 16px 10px;
+}
+.sb-nav a {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  color: #9098bb;
+  text-decoration: none;
+  font-size: 13.5px;
+  font-weight: 500;
+  margin-bottom: 2px;
+  transition: background 0.15s, color 0.15s;
+}
+.sb-nav a:hover, .sb-nav a.active {
+  background: rgba(79,110,247,0.15);
+  color: #c6d0f5;
+}
+.sb-nav a .nav-icon { font-size: 16px; width: 20px; text-align: center; }
+.sb-footer {
+  padding: 16px 20px;
+  border-top: 1px solid rgba(255,255,255,0.07);
+}
+.sb-footer a {
+  display: flex; align-items: center; gap: 8px;
+  color: #7b82a8; font-size: 12px; text-decoration: none;
+}
+.sb-footer a:hover { color: #c6d0f5; }
+
+/* ── Hamburger (mobile) ── */
+#menu-btn {
+  display: none;
+  position: fixed;
+  top: 14px; left: 14px;
+  z-index: 200;
+  background: #1a1f36;
+  border: none;
+  border-radius: 8px;
+  width: 38px; height: 38px;
+  cursor: pointer;
+  color: #fff;
+  font-size: 18px;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ── Main content ── */
+#main {
+  margin-left: 240px;
+  flex: 1;
+  min-width: 0;
+}
+.page-header {
+  background: #fff;
+  border-bottom: 1px solid #e8eaf2;
+  padding: 20px 32px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: sticky;
+  top: 0;
+  z-index: 50;
+}
+.page-header h1 {
+  font-size: 18px;
+  font-weight: 700;
+  color: #1a1f36;
+}
+.page-header .subtitle {
+  font-size: 12px;
+  color: #8b93b3;
+  margin-top: 2px;
+}
+#ts {
+  font-size: 11px;
+  color: #a0a8c0;
+  background: #f4f6fb;
+  padding: 5px 10px;
+  border-radius: 20px;
+}
+
+.content { padding: 28px 32px; }
+
+/* ── Section headings ── */
+.section-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: #1a1f36;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-bottom: 16px;
+  padding-bottom: 8px;
+  border-bottom: 2px solid #e8eaf2;
+}
+section { margin-bottom: 48px; }
+
+/* ── Stats cards ── */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 16px;
+  margin-bottom: 0;
+}
+.stat-card {
+  background: #fff;
+  border-radius: 14px;
+  padding: 18px 20px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+}
+.stat-icon {
+  width: 42px; height: 42px;
+  border-radius: 11px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 20px;
+  flex-shrink: 0;
+}
+.ic-green  { background: #edfaf4; }
+.ic-orange { background: #fff7ed; }
+.ic-red    { background: #fef2f2; }
+.ic-blue   { background: #eff6ff; }
+.ic-purple { background: #f5f3ff; }
+.ic-gray   { background: #f8fafc; }
+.stat-body { flex: 1; min-width: 0; }
+.stat-lbl {
+  font-size: 11px;
+  color: #8b93b3;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 4px;
+}
+.stat-val {
+  font-size: 28px;
+  font-weight: 800;
+  line-height: 1;
+  color: #1a1f36;
+}
+
+/* ── Panels grid ── */
+.panels {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+.panel {
+  background: #fff;
+  border-radius: 16px;
+  padding: 22px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+}
+.panel-title {
+  font-size: 12px;
+  font-weight: 700;
+  color: #4f6ef7;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* ── Form elements ── */
+label {
+  display: block;
+  font-size: 12px;
+  font-weight: 600;
+  color: #5a6180;
+  margin-bottom: 4px;
+  margin-top: 10px;
+}
+label:first-of-type { margin-top: 0; }
+input[type=text],
+input[type=email],
+input[type=number],
+input[type=datetime-local],
+input[type=url],
+input[type=file] {
+  width: 100%;
+  padding: 9px 12px;
+  border: 1.5px solid #e2e6f0;
+  border-radius: 9px;
+  font-size: 13px;
+  font-family: inherit;
+  color: #1e2340;
+  background: #fff;
+  outline: none;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+input:focus {
+  border-color: #4f6ef7;
+  box-shadow: 0 0 0 3px rgba(79,110,247,0.1);
+}
+input[type=file] { padding: 6px 10px; cursor: pointer; }
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: 100%;
+  padding: 10px 16px;
+  background: linear-gradient(135deg, #4f6ef7, #7c3aed);
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+  margin-top: 12px;
+  transition: opacity 0.15s, transform 0.1s;
+}
+.btn:hover { opacity: 0.92; transform: translateY(-1px); }
+.btn:active { transform: translateY(0); }
+.btn-sec {
+  background: #f4f6fb;
+  color: #4f6ef7;
+  border: 1.5px solid #dce2fb;
+}
+.btn-sec:hover { background: #eaedfc; }
+.btn-sm {
+  width: auto;
+  padding: 7px 14px;
+  font-size: 12px;
+  margin-top: 8px;
+}
+.btn-danger { background: linear-gradient(135deg, #ef4444, #dc2626); }
+
+.msg {
+  font-size: 12px;
+  margin-top: 8px;
+  padding: 7px 11px;
+  border-radius: 8px;
+  display: none;
+}
+.msg-ok  { background: #edfaf4; color: #065f46; display: block; }
+.msg-err { background: #fef2f2; color: #991b1b; display: block; }
+
+/* ── Face preview ── */
+#face-preview {
+  width: 72px; height: 72px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2.5px solid #4f6ef7;
+  margin: 10px auto 0;
+  display: block;
+  background: #f4f6fb;
+}
+#face-preview:not([src]), #face-preview[src=""] { display: none; }
+
+/* ── Divider ── */
+.or-divider {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 14px 0 4px;
+  color: #a0a8c0;
+  font-size: 11px;
+  font-weight: 600;
+}
+.or-divider::before, .or-divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: #e2e6f0;
+}
+
+/* ── Student list ── */
+.student-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 0;
+  border-bottom: 1px solid #f0f2f8;
+  font-size: 13px;
+}
+.student-row:last-child { border-bottom: none; }
+.avatar {
+  width: 36px; height: 36px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #4f6ef7, #7c3aed);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 14px; font-weight: 700; color: #fff;
+  flex-shrink: 0;
+}
+.s-info { flex: 1; min-width: 0; }
+.s-name { font-weight: 600; color: #1a1f36; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.s-id   { font-size: 11px; color: #a0a8c0; }
+.has-face { font-size: 11px; font-weight: 700; color: #059669; }
+.no-face  { font-size: 11px; color: #ef4444; }
+
+/* ── Attendance table ── */
+.table-wrap {
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+  overflow: hidden;
+}
+table { width: 100%; border-collapse: collapse; }
+thead th {
+  background: #1a1f36;
+  color: #9098bb;
+  padding: 11px 14px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  text-align: left;
+}
+tbody td {
+  padding: 11px 14px;
+  font-size: 13px;
+  border-bottom: 1px solid #f0f2f8;
+  color: #1e2340;
+}
+tbody tr:last-child td { border-bottom: none; }
+tbody tr:hover td { background: #f8f9fe; }
+
+/* ── Status badges ── */
+.badge {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+.b-present { background: #ecfdf5; color: #065f46; }
+.b-late    { background: #fff7ed; color: #92400e; }
+.b-absent  { background: #fef2f2; color: #991b1b; }
+.b-flag    { background: #fef2f2; color: #991b1b; }
+
+/* ── Import section ── */
+.import-box {
+  border: 2px dashed #dce2fb;
+  border-radius: 12px;
+  padding: 18px;
+  text-align: center;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+}
+.import-box:hover { border-color: #4f6ef7; background: #f4f6fb; }
+.import-box p { font-size: 13px; color: #8b93b3; margin-top: 6px; }
+.import-box .icon { font-size: 30px; }
+#import-file-input { display: none; }
+
+/* ── Responsive ── */
+@media (max-width: 900px) {
+  .panels { grid-template-columns: 1fr; }
+}
+@media (max-width: 720px) {
+  #sidebar { transform: translateX(-100%); }
+  #sidebar.open { transform: translateX(0); }
+  #menu-btn { display: flex; }
+  #main { margin-left: 0; }
+  .page-header { padding: 14px 18px 14px 64px; }
+  .content { padding: 18px; }
+  .stats-grid { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 480px) {
+  .stats-grid { grid-template-columns: 1fr; }
+}
+
+/* ── Overlay (mobile) ── */
+#overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.4);
+  z-index: 90;
+}
+#overlay.show { display: block; }
+</style>
+</head>
+<body>
+
+<!-- Mobile overlay -->
+<div id="overlay" onclick="closeSidebar()"></div>
+
+<!-- Hamburger -->
+<button id="menu-btn" onclick="toggleSidebar()">&#9776;</button>
+
+<!-- Sidebar -->
+<nav id="sidebar">
+  <div class="sb-header">
+    <a class="sb-logo" href="#">
+      <div class="sb-pin">&#128205;</div>
+      <div>
+        <div class="sb-title">Geo Presenze</div>
+        <div class="sb-subtitle">Version 3.0</div>
+      </div>
+    </a>
+  </div>
+  <div class="sb-nav">
+    <a href="#sec-dashboard" class="active" onclick="setActive(this)">
+      <span class="nav-icon">&#128202;</span> Dashboard
+    </a>
+    <a href="#sec-students" onclick="setActive(this)">
+      <span class="nav-icon">&#127979;</span> Students
+    </a>
+    <a href="#sec-sessions" onclick="setActive(this)">
+      <span class="nav-icon">&#128197;</span> Sessions
+    </a>
+    <a href="#sec-attendance" onclick="setActive(this)">
+      <span class="nav-icon">&#9989;</span> Attendance
+    </a>
+  </div>
+  <div class="sb-footer">
+    <a href="/scan">&#128247; Open Scan Page</a>
+  </div>
+</nav>
+
+<!-- Main -->
+<div id="main">
+  <div class="page-header">
+    <div>
+      <h1>Geo Presenze 3.0</h1>
+      <div class="subtitle">Geolocation &amp; Face-Recognition Attendance</div>
+    </div>
+    <span id="ts">Loading…</span>
+  </div>
+
+  <div class="content">
+
+    <!-- SECTION: Dashboard stats -->
+    <section id="sec-dashboard">
+      <div class="section-title">&#128202; Overview</div>
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-icon ic-blue">&#127979;</div>
+          <div class="stat-body">
+            <div class="stat-lbl">Students</div>
+            <div class="stat-val" id="s0">—</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon ic-purple">&#128197;</div>
+          <div class="stat-body">
+            <div class="stat-lbl">Sessions</div>
+            <div class="stat-val" id="s1">—</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon ic-green">&#9989;</div>
+          <div class="stat-body">
+            <div class="stat-lbl">Present</div>
+            <div class="stat-val" id="s2" style="color:#059669">—</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon ic-orange">&#9201;</div>
+          <div class="stat-body">
+            <div class="stat-lbl">Late</div>
+            <div class="stat-val" id="s3" style="color:#d97706">—</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon ic-red">&#9888;</div>
+          <div class="stat-body">
+            <div class="stat-lbl">Flagged</div>
+            <div class="stat-val" id="s4" style="color:#dc2626">—</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon ic-gray">&#128200;</div>
+          <div class="stat-body">
+            <div class="stat-lbl">Present Rate</div>
+            <div class="stat-val" id="s5">—</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SECTION: Students -->
+    <section id="sec-students">
+      <div class="section-title">&#127979; Students</div>
+      <div class="panels">
+
+        <!-- Add student -->
+        <div class="panel">
+          <div class="panel-title">&#43; Add Student</div>
+          <label>Student ID</label>
+          <input type="text" id="new-sid" placeholder="e.g. STD-002">
+          <label>Full Name</label>
+          <input type="text" id="new-name" placeholder="e.g. Siti Rahayu">
+          <label>Email (optional)</label>
+          <input type="email" id="new-email" placeholder="e.g. siti@uni.edu">
+          <button class="btn" onclick="addStudent()">&#43; Add Student</button>
+          <div class="msg" id="msg-add"></div>
+
+          <div class="or-divider">or bulk import</div>
+
+          <!-- Import CSV/Excel -->
+          <div class="import-box" onclick="document.getElementById('import-file-input').click()">
+            <div class="icon">&#128196;</div>
+            <p>Click to upload CSV or Excel (.xlsx)<br>
+              <small>Columns: <code>student_id</code>, <code>name</code>, <code>email</code> (optional)</small>
+            </p>
+          </div>
+          <input type="file" id="import-file-input" accept=".csv,.xlsx,.xls" onchange="importStudents(this)">
+          <div class="msg" id="msg-import"></div>
+        </div>
+
+        <!-- Upload face / face-from-URL -->
+        <div class="panel">
+          <div class="panel-title">&#128247; Face Photo</div>
+          <label>Student ID</label>
+          <input type="text" id="face-sid" placeholder="e.g. STD-001">
+
+          <label>Upload photo file</label>
+          <input type="file" id="face-file" accept="image/*" onchange="previewFace(this)">
+          <img id="face-preview" src="" alt="preview">
+          <button class="btn" onclick="uploadFace()">&#128228; Upload Face File</button>
+          <div class="msg" id="msg-face"></div>
+
+          <div class="or-divider">or use a URL</div>
+
+          <label>Photo URL (Google Drive or direct link)</label>
+          <input type="url" id="face-url" placeholder="https://drive.google.com/file/d/…/view">
+          <button class="btn btn-sec" onclick="faceFromUrl()">&#127760; Fetch from URL</button>
+          <div class="msg" id="msg-face-url"></div>
+        </div>
+
+        <!-- Student list -->
+        <div class="panel" style="grid-column: 1 / -1;">
+          <div class="panel-title">&#128101; Registered Students</div>
+          <div id="student-list"><div style="color:#a0a8c0;font-size:13px;padding:8px 0">Loading…</div></div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- SECTION: Sessions -->
+    <section id="sec-sessions">
+      <div class="section-title">&#128197; Sessions</div>
+      <div class="panels">
+        <div class="panel">
+          <div class="panel-title">&#43; Create Session</div>
+          <label>Course Code</label>
+          <input type="text" id="s-code" placeholder="e.g. CS301">
+          <label>Course Name</label>
+          <input type="text" id="s-name" placeholder="e.g. Algorithms">
+          <label>Room</label>
+          <input type="text" id="s-room" placeholder="e.g. B203">
+          <label>Start Time</label>
+          <input type="datetime-local" id="s-start">
+          <label>End Time</label>
+          <input type="datetime-local" id="s-end">
+          <label>Campus Latitude</label>
+          <input type="text" id="s-lat" placeholder="e.g. 5.373691">
+          <label>Campus Longitude</label>
+          <input type="text" id="s-lng" placeholder="e.g. 103.078824">
+          <label>Radius (metres)</label>
+          <input type="number" id="s-radius" value="100">
+          <button class="btn" onclick="addSession()">&#128197; Create Session</button>
+          <div class="msg" id="msg-sess"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SECTION: Attendance -->
+    <section id="sec-attendance">
+      <div class="section-title">&#9989; Attendance Records</div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Student</th>
+              <th>Course</th>
+              <th>Time</th>
+              <th>Status</th>
+              <th>Distance</th>
+              <th>Face %</th>
+              <th>Flagged</th>
+            </tr>
+          </thead>
+          <tbody id="tbody">
+            <tr><td colspan="7" style="color:#a0a8c0;text-align:center;padding:24px">Loading…</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+  </div><!-- /content -->
+</div><!-- /main -->
+
+<script>
+/* ── Sidebar ── */
+function toggleSidebar(){
+  document.getElementById('sidebar').classList.toggle('open');
+  document.getElementById('overlay').classList.toggle('show');
+}
+function closeSidebar(){
+  document.getElementById('sidebar').classList.remove('open');
+  document.getElementById('overlay').classList.remove('show');
+}
+function setActive(el){
+  document.querySelectorAll('.sb-nav a').forEach(a=>a.classList.remove('active'));
+  el.classList.add('active');
+  closeSidebar();
+}
+
+/* ── Msg helper ── */
+function msg(id, text, ok){
+  const el = document.getElementById(id);
+  el.textContent = text;
+  el.className = 'msg ' + (ok ? 'msg-ok' : 'msg-err');
+}
+
+/* ── Face preview ── */
 function previewFace(input){
-  const file=input.files[0]; if(!file) return;
-  const reader=new FileReader();
-  reader.onload=e=>{
-    const img=document.getElementById('face-preview');
-    img.src=e.target.result; img.style.display='block';
+  const file = input.files[0]; if(!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    const img = document.getElementById('face-preview');
+    img.src = e.target.result;
+    img.style.display = 'block';
   };
   reader.readAsDataURL(file);
 }
 
+/* ── Add student ── */
 async function addStudent(){
-  const sid=document.getElementById('new-sid').value.trim();
-  const name=document.getElementById('new-name').value.trim();
-  const email=document.getElementById('new-email').value.trim();
-  if(!sid||!name){msg('msg-add','Student ID and Name are required.',false);return;}
-  const r=await fetch('/api/students',{method:'POST',
-    headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({student_id:sid,name,email})});
-  const d=await r.json();
-  if(d.ok){msg('msg-add','Student added!',true);loadStudents();}
-  else msg('msg-add',d.error||'Error',false);
+  const sid   = document.getElementById('new-sid').value.trim();
+  const name  = document.getElementById('new-name').value.trim();
+  const email = document.getElementById('new-email').value.trim();
+  if(!sid || !name){ msg('msg-add','Student ID and Name are required.',false); return; }
+  const r = await fetch('/api/students', {
+    method: 'POST',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({student_id: sid, name, email})
+  });
+  const d = await r.json();
+  if(d.ok){ msg('msg-add','Student added successfully!', true); loadStudents(); }
+  else msg('msg-add', d.error || 'Error', false);
 }
 
+/* ── Upload face file ── */
 async function uploadFace(){
-  const sid=document.getElementById('face-sid').value.trim();
-  const file=document.getElementById('face-file').files[0];
-  if(!sid||!file){msg('msg-face','Student ID and photo required.',false);return;}
-  const fd=new FormData();
-  fd.append('student_id',sid); fd.append('photo',file);
-  const r=await fetch('/api/students/face',{method:'POST',body:fd});
-  const d=await r.json();
-  if(d.ok){msg('msg-face','Face uploaded successfully!',true);loadStudents();}
-  else msg('msg-face',d.error||'Error',false);
+  const sid  = document.getElementById('face-sid').value.trim();
+  const file = document.getElementById('face-file').files[0];
+  if(!sid || !file){ msg('msg-face','Student ID and photo are required.', false); return; }
+  const fd = new FormData();
+  fd.append('student_id', sid);
+  fd.append('photo', file);
+  const r = await fetch('/api/students/face', {method:'POST', body: fd});
+  const d = await r.json();
+  if(d.ok){ msg('msg-face','Face uploaded successfully!', true); loadStudents(); }
+  else msg('msg-face', d.error || 'Error', false);
 }
 
+/* ── Face from URL ── */
+async function faceFromUrl(){
+  const sid = document.getElementById('face-sid').value.trim();
+  const url = document.getElementById('face-url').value.trim();
+  if(!sid || !url){ msg('msg-face-url','Student ID and URL are required.', false); return; }
+  const r = await fetch('/api/students/face-url', {
+    method: 'POST',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({student_id: sid, url})
+  });
+  const d = await r.json();
+  if(d.ok){ msg('msg-face-url','Face photo saved from URL!', true); loadStudents(); }
+  else msg('msg-face-url', d.error || 'Error', false);
+}
+
+/* ── Import CSV/Excel ── */
+async function importStudents(input){
+  const file = input.files[0]; if(!file) return;
+  const fd = new FormData();
+  fd.append('file', file);
+  msg('msg-import', 'Uploading…', true);
+  const r = await fetch('/api/students/import', {method:'POST', body: fd});
+  const d = await r.json();
+  if(d.ok){
+    let text = `Added ${d.added} student(s), skipped ${d.skipped} duplicate(s).`;
+    if(d.errors && d.errors.length) text += ` Warnings: ${d.errors.join('; ')}`;
+    msg('msg-import', text, true);
+    loadStudents();
+  } else {
+    msg('msg-import', d.error || 'Import failed.', false);
+  }
+  input.value = '';
+}
+
+/* ── Create session ── */
 async function addSession(){
-  const code=document.getElementById('s-code').value.trim();
-  const name=document.getElementById('s-name').value.trim();
-  const room=document.getElementById('s-room').value.trim();
-  const start=document.getElementById('s-start').value;
-  const end=document.getElementById('s-end').value;
-  const lat=parseFloat(document.getElementById('s-lat').value);
-  const lng=parseFloat(document.getElementById('s-lng').value);
-  const radius=parseFloat(document.getElementById('s-radius').value)||100;
-  if(!code||!start||!end||!lat||!lng){msg('msg-sess','Fill in all required fields.',false);return;}
-  const r=await fetch('/api/sessions',{method:'POST',
-    headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({course_code:code,course_name:name,room,
-      start_time:new Date(start).toISOString(),
-      end_time:new Date(end).toISOString(),
-      lat,lng,radius_m:radius})});
-  const d=await r.json();
-  if(d.ok){msg('msg-sess',`Session created (ID: ${d.id})`,true);}
-  else msg('msg-sess',d.error||'Error',false);
+  const code   = document.getElementById('s-code').value.trim();
+  const name   = document.getElementById('s-name').value.trim();
+  const room   = document.getElementById('s-room').value.trim();
+  const start  = document.getElementById('s-start').value;
+  const end    = document.getElementById('s-end').value;
+  const lat    = parseFloat(document.getElementById('s-lat').value);
+  const lng    = parseFloat(document.getElementById('s-lng').value);
+  const radius = parseFloat(document.getElementById('s-radius').value) || 100;
+  if(!code || !start || !end || !lat || !lng){
+    msg('msg-sess','Please fill in all required fields.', false); return;
+  }
+  const r = await fetch('/api/sessions', {
+    method: 'POST',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({
+      course_code: code, course_name: name, room,
+      start_time: new Date(start).toISOString(),
+      end_time:   new Date(end).toISOString(),
+      lat, lng, radius_m: radius
+    })
+  });
+  const d = await r.json();
+  if(d.ok) msg('msg-sess', `Session created (ID: ${d.id})`, true);
+  else msg('msg-sess', d.error || 'Error', false);
 }
 
+/* ── Load students list ── */
 async function loadStudents(){
-  const students=await fetch('/api/students').then(r=>r.json());
-  const el=document.getElementById('student-list');
-  if(!students.length){el.innerHTML='<div style="color:#aaa;font-size:13px">No students yet.</div>';return;}
-  el.innerHTML=students.map(s=>`
+  const students = await fetch('/api/students').then(r=>r.json());
+  const el = document.getElementById('student-list');
+  if(!students.length){
+    el.innerHTML = '<div style="color:#a0a8c0;font-size:13px;padding:8px 0">No students registered yet.</div>';
+    return;
+  }
+  el.innerHTML = students.map(s => `
     <div class="student-row">
-      <div class="avatar" style="display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:#0F6E56">
-        ${s.name.charAt(0).toUpperCase()}
-      </div>
+      <div class="avatar">${s.name.charAt(0).toUpperCase()}</div>
       <div class="s-info">
         <div class="s-name">${s.name}</div>
-        <div class="s-id">${s.student_id}</div>
+        <div class="s-id">${s.student_id}${s.email ? ' &bull; ' + s.email : ''}</div>
       </div>
-      <div>${s.has_face?'<span class="has-face">✓ Face</span>':'<span class="no-face">No face</span>'}</div>
+      <div>${s.has_face
+        ? '<span class="has-face">&#10003; Face</span>'
+        : '<span class="no-face">No face</span>'}</div>
     </div>`).join('');
 }
 
+/* ── Load stats + attendance ── */
 async function load(){
-  const [st,att]=await Promise.all([
+  const [st, att] = await Promise.all([
     fetch('/api/stats').then(r=>r.json()),
     fetch('/api/attendance').then(r=>r.json())
   ]);
-  [st.students,st.sessions,st.present,st.late,st.flagged,st.rate+'%']
-    .forEach((v,i)=>document.getElementById('s'+i).textContent=v);
-  document.getElementById('ts').textContent='Updated '+new Date().toLocaleTimeString();
-  const tb=document.getElementById('tbody');
-  if(!att.length){tb.innerHTML='<tr><td colspan="7" style="color:#888">No records yet.</td></tr>';return;}
-  tb.innerHTML=att.map(r=>`<tr>
-    <td>${r.student_name||'—'}<br><small style="color:#aaa">${r.student_id||''}</small></td>
-    <td>${r.course_code||'—'}</td>
-    <td style="font-size:11px">${(r.timestamp||'').replace('T',' ').slice(0,16)}</td>
+
+  [st.students, st.sessions, st.present, st.late, st.flagged, st.rate + '%']
+    .forEach((v, i) => document.getElementById('s'+i).textContent = v);
+
+  document.getElementById('ts').textContent = 'Updated ' + new Date().toLocaleTimeString();
+
+  const tb = document.getElementById('tbody');
+  if(!att.length){
+    tb.innerHTML = '<tr><td colspan="7" style="color:#a0a8c0;text-align:center;padding:24px">No attendance records yet.</td></tr>';
+    return;
+  }
+  tb.innerHTML = att.map(r => `<tr>
+    <td>
+      <strong>${r.student_name || '—'}</strong><br>
+      <small style="color:#a0a8c0">${r.student_id || ''}</small>
+    </td>
+    <td>${r.course_code || '—'}</td>
+    <td style="font-size:12px;color:#5a6180">${(r.timestamp||'').replace('T',' ').slice(0,16)}</td>
     <td><span class="badge b-${r.status||'absent'}">${(r.status||'absent').toUpperCase()}</span></td>
-    <td>${r.distance_m!=null?r.distance_m+' m':'—'}</td>
-    <td>${r.face_conf!=null?r.face_conf+'%':'—'}</td>
-    <td>${r.flagged?'<span class="badge b-flag">⚠ Yes</span>':'—'}</td>
+    <td>${r.distance_m != null ? r.distance_m + ' m' : '—'}</td>
+    <td>${r.face_conf != null ? r.face_conf + '%' : '—'}</td>
+    <td>${r.flagged ? '<span class="badge b-flag">&#9888; Yes</span>' : '—'}</td>
   </tr>`).join('');
 }
 
-load(); loadStudents(); setInterval(load,15000);
-</script></body></html>
+/* ── Init ── */
+load();
+loadStudents();
+setInterval(load, 15000);
+</script>
+</body>
+</html>
