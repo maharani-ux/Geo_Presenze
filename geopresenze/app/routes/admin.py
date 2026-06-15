@@ -23,6 +23,8 @@ def debug():
                       "face_exists": os.path.exists(s.face_path) if s.face_path else False}
                      for s in students],
         "static_folder": current_app.static_folder,
+        "faces_dir": current_app.config.get("FACES_DIR"),
+        "db_url": current_app.config.get("SQLALCHEMY_DATABASE_URI"),
     })
 
 @admin_bp.route("/")
@@ -52,7 +54,7 @@ def upload_face():
         return jsonify({"error": "student_id and photo required"}), 400
     s = Student.query.filter_by(student_id=sid).first()
     if not s: return jsonify({"error": "Student not found"}), 404
-    faces_dir = os.path.join(current_app.static_folder, "faces")
+    faces_dir = current_app.config["FACES_DIR"]
     os.makedirs(faces_dir, exist_ok=True)
     path = os.path.join(faces_dir, f"{sid}.jpg")
     photo.save(path)

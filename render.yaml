@@ -10,7 +10,9 @@ services:
         generateValue: true
       - key: PYTHON_VERSION
         value: "3.11.9"
+      - key: DATA_DIR
+        value: /data/geopresenze
     disk:
-      name: faces-storage
-      mountPath: /opt/render/project/src/geopresenze/static/faces
+      name: geopresenze-data
+      mountPath: /data/geopresenze
       sizeGB: 1
